@@ -112,10 +112,7 @@ public class CommandProcessor {
             return false;
         }
 
-        // Default response
-        String response = "Enakku puriyale. Repati sollu. (I don't understand. Please say again.)";
-        textToSpeech.speakTanglish(response);
-        System.out.println("[Jarvis]: " + response);
+        // Default: don't respond to unknown commands (let API processor handle them)
         return true;
     }
 
@@ -142,7 +139,7 @@ public class CommandProcessor {
      */
     private void printHelp() {
         System.out.println("\n=== JARVIS AI ASSISTANT - HELP ===");
-        System.out.println("Available Commands (Tanglish/English):");
+        System.out.println("\nBasic Commands (Tanglish/English):");
         System.out.println("  - 'time' / 'neram' - Get current time");
         System.out.println("  - 'date' / 'naal' - Get current date");
         System.out.println("  - 'hello' / 'vanakkam' - Greet Jarvis");
@@ -153,6 +150,11 @@ public class CommandProcessor {
         System.out.println("  - 'open youtube' - Open YouTube in browser");
         System.out.println("  - 'help' - Show this help menu");
         System.out.println("  - 'bye' / 'exit' / 'quit' - Exit Jarvis");
-        System.out.println("================================\n");
+        System.out.println("\nAPI Commands (External APIs):");
+        System.out.println("  - 'joke' - Get a random joke");
+        System.out.println("  - 'programming joke' - Get a programming joke");
+        System.out.println("  - 'quote' / 'motivation' - Get a motivational quote");
+        System.out.println("  - 'weather' - Get weather information (Chennai)");
+        System.out.println("\n================================\n");
     }
 }

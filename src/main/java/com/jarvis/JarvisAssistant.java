@@ -4,19 +4,21 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Main Jarvis AI Assistant Class
- * A complete Java-based AI Assistant with Tanglish support
+ * Main Jarvis AI Assistant Class with API Support
+ * A complete Java-based AI Assistant with Tanglish support and external APIs
  */
 public class JarvisAssistant {
     private TextToSpeech textToSpeech;
     private SpeechRecognition speechRecognition;
     private CommandProcessor commandProcessor;
+    private APICommandProcessor apiCommandProcessor;
     private boolean isRunning;
 
     public JarvisAssistant() {
         this.textToSpeech = new TextToSpeech();
         this.speechRecognition = new SpeechRecognition();
         this.commandProcessor = new CommandProcessor(textToSpeech);
+        this.apiCommandProcessor = new APICommandProcessor(textToSpeech);
         this.isRunning = false;
     }
 
@@ -64,7 +66,13 @@ public class JarvisAssistant {
                     continue;
                 }
 
-                // Process command
+                // Try API commands first
+                if (!apiCommandProcessor.processAPICommand(userCommand)) {
+                    this.isRunning = false;
+                    break;
+                }
+
+                // Then process regular commands
                 boolean continueRunning = commandProcessor.processCommand(userCommand);
                 
                 if (!continueRunning) {
@@ -99,11 +107,12 @@ public class JarvisAssistant {
         System.out.println("\n" +
                 "╔═══════════════════════════════════════════════════════════╗\n" +
                 "║                                                           ║\n" +
-                "║         WELCOME TO JARVIS AI ASSISTANT v1.0              ║\n" +
-                "║              (With Tanglish Language Support)             ║\n" +
+                "║         WELCOME TO JARVIS AI ASSISTANT v1.1              ║\n" +
+                "║              (With Tanglish & API Support)               ║\n" +
                 "║                                                           ║\n" +
                 "║  A Complete Java-based AI Assistant                      ║\n" +
                 "║  Developed with Tamil/Tanglish Communication             ║\n" +
+                "║  Integrated with External APIs (Jokes, Quotes, Weather)  ║\n" +
                 "║                                                           ║\n" +
                 "╚═══════════════════════════════════════════════════════════╝\n");
         
@@ -117,7 +126,7 @@ public class JarvisAssistant {
      * Get version
      */
     public String getVersion() {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     /**
