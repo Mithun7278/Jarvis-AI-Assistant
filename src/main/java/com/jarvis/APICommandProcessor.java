@@ -5,11 +5,12 @@ import com.jarvis.api.QuotesAPI;
 import com.jarvis.api.WeatherAPI;
 
 /**
- * Extended Command Processor with API Integration
- * Handles jokes, quotes, and weather commands
+ * Extended Command Processor with API Integration and TalkBack Support
+ * Handles jokes, quotes, and weather commands with accessibility features
  */
 public class APICommandProcessor {
     private TextToSpeech textToSpeech;
+    private static final String GREETING_PREFIX = "Hi Sir. ";
 
     public APICommandProcessor(TextToSpeech textToSpeech) {
         this.textToSpeech = textToSpeech;
@@ -44,10 +45,12 @@ public class APICommandProcessor {
     }
 
     /**
-     * Handle joke commands
+     * Handle joke commands with "Hi Sir" greeting
      */
     private boolean handleJokeCommand(String command) {
         try {
+            // Provide accessibility feedback
+            textToSpeech.announceScreenEvent("Fetching joke from API");
             System.out.println("\n[Fetching joke from API...]");
             
             JokeGenerator.Joke joke;
@@ -61,25 +64,27 @@ public class APICommandProcessor {
             // Display joke
             System.out.println("\n" + joke.toFormattedString());
             
-            // Speak joke in Tanglish
-            String tanglishJoke = TanglishTranslator.translateToTanglish("joke") + ": " + joke.getSetup();
-            textToSpeech.speakTanglish(tanglishJoke);
-            System.out.println("\n[Jarvis]: " + tanglishJoke);
+            // Speak joke with "Hi Sir" greeting
+            String jokeResponse = GREETING_PREFIX + joke.getSetup();
+            textToSpeech.speakTanglish(jokeResponse);
+            System.out.println("\n[Jarvis]: " + jokeResponse);
             
             return true;
         } catch (Exception e) {
             String errorMsg = "[Error fetching joke]: " + e.getMessage();
             System.out.println(errorMsg);
-            textToSpeech.speakTanglish("Enakku joke fetch seigal mudiyale.");
+            textToSpeech.speakTanglish("Hi Sir. Enakku joke fetch seigal mudiyale.");
+            textToSpeech.announceScreenEvent("Error while fetching joke");
             return true;
         }
     }
 
     /**
-     * Handle quote commands
+     * Handle quote commands with "Hi Sir" greeting
      */
     private boolean handleQuoteCommand() {
         try {
+            textToSpeech.announceScreenEvent("Fetching quote from API");
             System.out.println("\n[Fetching quote from API...]");
             
             QuotesAPI.Quote quote = QuotesAPI.getRandomQuote();
@@ -87,24 +92,27 @@ public class APICommandProcessor {
             // Display quote
             System.out.println("\n" + quote.toFormattedString());
             
-            // Speak quote in Tanglish
-            textToSpeech.speakTanglish("Motivation: " + quote.getContent());
-            System.out.println("\n[Jarvis]: " + quote.toString());
+            // Speak quote with "Hi Sir" greeting
+            String quoteResponse = GREETING_PREFIX + quote.getContent();
+            textToSpeech.speakTanglish(quoteResponse);
+            System.out.println("\n[Jarvis]: " + quoteResponse);
             
             return true;
         } catch (Exception e) {
             String errorMsg = "[Error fetching quote]: " + e.getMessage();
             System.out.println(errorMsg);
-            textToSpeech.speakTanglish("Enakku quote fetch seigal mudiyale.");
+            textToSpeech.speakTanglish("Hi Sir. Enakku quote fetch seigal mudiyale.");
+            textToSpeech.announceScreenEvent("Error while fetching quote");
             return true;
         }
     }
 
     /**
-     * Handle weather commands
+     * Handle weather commands with "Hi Sir" greeting
      */
     private boolean handleWeatherCommand(String command) {
         try {
+            textToSpeech.announceScreenEvent("Fetching weather from API");
             System.out.println("\n[Fetching weather from API...]");
             
             // Default to Chennai, India coordinates
@@ -118,16 +126,17 @@ public class APICommandProcessor {
             System.out.println("Condition: " + weather.getCondition());
             System.out.println("Details: " + weather.getDetails());
             
-            // Speak weather in Tanglish
-            String tanglishWeather = "Weather: " + weather.getCondition() + " " + weather.getDetails();
-            textToSpeech.speakTanglish(tanglishWeather);
-            System.out.println("\n[Jarvis]: " + weather.toString());
+            // Speak weather with "Hi Sir" greeting
+            String weatherResponse = GREETING_PREFIX + "Weather: " + weather.getCondition() + ". " + weather.getDetails();
+            textToSpeech.speakTanglish(weatherResponse);
+            System.out.println("\n[Jarvis]: " + weatherResponse);
             
             return true;
         } catch (Exception e) {
             String errorMsg = "[Error fetching weather]: " + e.getMessage();
             System.out.println(errorMsg);
-            textToSpeech.speakTanglish("Enakku weather fetch seigal mudiyale.");
+            textToSpeech.speakTanglish("Hi Sir. Enakku weather fetch seigal mudiyale.");
+            textToSpeech.announceScreenEvent("Error while fetching weather");
             return true;
         }
     }

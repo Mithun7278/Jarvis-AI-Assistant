@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Main Jarvis AI Assistant Class with API Support
- * A complete Java-based AI Assistant with Tanglish support and external APIs
+ * Main Jarvis AI Assistant Class with TalkBack Accessibility Support
+ * A complete Java-based AI Assistant with Tanglish support, APIs, and TalkBack
  */
 public class JarvisAssistant {
     private TextToSpeech textToSpeech;
@@ -16,14 +16,14 @@ public class JarvisAssistant {
 
     public JarvisAssistant() {
         this.textToSpeech = new TextToSpeech();
-        this.speechRecognition = new SpeechRecognition();
+        this.speechRecognition = new SpeechRecognition(textToSpeech);
         this.commandProcessor = new CommandProcessor(textToSpeech);
         this.apiCommandProcessor = new APICommandProcessor(textToSpeech);
         this.isRunning = false;
     }
 
     /**
-     * Initialize Jarvis Assistant
+     * Initialize Jarvis Assistant with TalkBack support
      */
     public void initialize() {
         printWelcomeBanner();
@@ -32,11 +32,15 @@ public class JarvisAssistant {
         try {
             Thread.sleep(1000);
             System.out.println("[Systems loaded successfully!]");
+            System.out.println("[TalkBack Accessibility: ENABLED]");
             System.out.println("[Ready to assist you!]\n");
             
-            // Speak welcome message
+            // Provide accessibility announcement
+            textToSpeech.announceScreenEvent("Jarvis AI Assistant initialized. TalkBack is enabled.");
+            
+            // Speak welcome message with "Hi Sir" greeting
             textToSpeech.speakTanglish("Vanakkam! Naan Jarvis. Yeppadi irukkai?");
-            System.out.println("[Jarvis]: Vanakkam! Naan Jarvis. Yeppadi irukkai? (Hello! I am Jarvis. How are you?)");
+            System.out.println("[Jarvis]: Hi Sir. Vanakkam! Naan Jarvis. Yeppadi irukkai? (Hello Sir! I am Jarvis. How are you?)");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -52,14 +56,15 @@ public class JarvisAssistant {
     }
 
     /**
-     * Main command loop
+     * Main command loop with TalkBack support
      */
     private void commandLoop() {
-        System.out.println("\n[Type your commands below. Type 'help' for available commands or 'exit' to quit]");
+        System.out.println("\n[Type your voice commands below. Type 'help' for available commands or 'exit' to quit]");
+        System.out.println("[TalkBack is enabled - All commands will be announced]\n");
         
         while (isRunning) {
             try {
-                // Listen for user input
+                // Listen for user voice input with accessibility support
                 String userCommand = speechRecognition.listen();
 
                 if (userCommand.isEmpty()) {
@@ -94,6 +99,7 @@ public class JarvisAssistant {
      */
     public void shutdown() {
         System.out.println("\n[Shutting down Jarvis Assistant...]");
+        textToSpeech.announceScreenEvent("Jarvis AI Assistant is shutting down. Goodbye.");
         textToSpeech.stop();
         speechRecognition.close();
         System.out.println("[Goodbye! See you next time!]\n");
@@ -107,12 +113,12 @@ public class JarvisAssistant {
         System.out.println("\n" +
                 "╔═══════════════════════════════════════════════════════════╗\n" +
                 "║                                                           ║\n" +
-                "║         WELCOME TO JARVIS AI ASSISTANT v1.1              ║\n" +
-                "║              (With Tanglish & API Support)               ║\n" +
+                "║      WELCOME TO JARVIS AI ASSISTANT v1.2               ║\n" +
+                "║     (With TalkBack Accessibility & API Support)         ║\n" +
                 "║                                                           ║\n" +
-                "║  A Complete Java-based AI Assistant                      ║\n" +
-                "║  Developed with Tamil/Tanglish Communication             ║\n" +
-                "║  Integrated with External APIs (Jokes, Quotes, Weather)  ║\n" +
+                "║   A Complete Java-based AI Assistant                    ║\n" +
+                "║   Developed with Tamil/Tanglish Communication           ║\n" +
+                "║   Integrated with External APIs & TalkBack Accessibility║\n" +
                 "║                                                           ║\n" +
                 "╚═══════════════════════════════════════════════════════════╝\n");
         
@@ -120,13 +126,14 @@ public class JarvisAssistant {
         System.out.println("  OS: " + System.getProperty("os.name"));
         System.out.println("  Java Version: " + System.getProperty("java.version"));
         System.out.println("  Current Time: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("  Accessibility: TalkBack Enabled");
     }
 
     /**
      * Get version
      */
     public String getVersion() {
-        return "1.1.0";
+        return "1.2.0";
     }
 
     /**

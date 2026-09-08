@@ -1,70 +1,143 @@
 package com.jarvis;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
+import javax.sound.sampled.*;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 
 /**
- * Text-to-Speech Engine for Jarvis AI Assistant
+ * Text-to-Speech Engine with TalkBack Accessibility Support
+ * Provides voice output in multiple languages with accessibility features
  */
 public class TextToSpeech {
     private static final String TTS_URL = "https://translate.google.com/translate_tts";
     private Clip audioClip;
+    private boolean talkBackEnabled;
+    private static final long SPEECH_DELAY = 500; // Delay between announcements
+
+    public TextToSpeech() {
+        this.talkBackEnabled = true; // TalkBack enabled by default
+    }
 
     /**
-     * Speak text using system-level TTS
+     * Enable/Disable TalkBack accessibility
+     */
+    public void setTalkBackEnabled(boolean enabled) {
+        this.talkBackEnabled = enabled;
+    }
+
+    public boolean isTalkBackEnabled() {
+        return talkBackEnabled;
+    }
+
+    /**
+     * Speak text with TalkBack support
      */
     public void speak(String text) {
-        try {
-            // Use Java's built-in speech synthesis
-            Runtime.getRuntime().exec(new String[]{
-                    "espeak",
-                    "-v", "ta", // Tamil voice
-                    text
-            }).waitFor();
-        } catch (Exception e) {
-            // Fallback: Use system beep
+        if (!talkBackEnabled) {
             System.out.println("[JARVIS]: " + text);
-            System.out.println("\u0007"); // System beep
+            return;
+        }
+
+        try {
+            // Add accessibility announcement
+            announceForAccessibility("Speaking: " + text);
+            
+            // Use Java's built-in speech synthesis
+            Process process = Runtime.getRuntime().exec(new String[]{
+                    "espeak",
+                    text
+            });
+            process.waitFor();
+            
+            Thread.sleep(SPEECH_DELAY);
+        } catch (Exception e) {
+            System.out.println("[JARVIS]: " + text);
+            System.out.println("[TalkBack]: " + text);
         }
     }
 
     /**
-     * Speak in Tanglish
+     * Speak in Tanglish with TalkBack and "Hi Sir" greeting
      */
     public void speakTanglish(String text) {
+        if (!talkBackEnabled) {
+            System.out.println("[JARVIS]: " + text);
+            return;
+        }
+
         try {
-            // Use espeak with Tamil support
+            // Announce greeting for accessibility
+            announceForAccessibility("Jarvis: Hi Sir");
+            
+            // Use espeak with Tamil voice
             String tanglishText = TanglishTranslator.translateToTanglish(text);
-            Runtime.getRuntime().exec(new String[]{
+            
+            Process process = Runtime.getRuntime().exec(new String[]{
                     "espeak",
-                    "-v", "ta",
-                    tanglishText
-            }).waitFor();
-            System.out.println("[JARVIS (Tanglish)]: " + tanglishText);
+                    "-v", "ta", // Tamil voice
+                    "Hi Sir. " + tanglishText
+            });
+            process.waitFor();
+            
+            // Log for accessibility
+            System.out.println("[TalkBack]: Hi Sir. " + tanglishText);
+            Thread.sleep(SPEECH_DELAY);
         } catch (Exception e) {
-            // Fallback: Print to console
-            System.out.println("[JARVIS (Tanglish)]: " + text);
+            String tanglishText = TanglishTranslator.translateToTanglish(text);
+            System.out.println("[JARVIS]: Hi Sir. " + tanglishText);
+            System.out.println("[TalkBack]: Hi Sir. " + tanglishText);
         }
     }
 
     /**
-     * Speak with custom language
+     * Speak with custom language and TalkBack support
      */
     public void speak(String text, String language) {
+        if (!talkBackEnabled) {
+            System.out.println("[JARVIS]: " + text);
+            return;
+        }
+
         try {
             String voiceCode = getVoiceCode(language);
-            Runtime.getRuntime().exec(new String[]{
+            
+            // Announce for accessibility
+            announceForAccessibility("Speaking in " + language + ": " + text);
+            
+            Process process = Runtime.getRuntime().exec(new String[]{
                     "espeak",
                     "-v", voiceCode,
-                    text
-            }).waitFor();
+                    "Hi Sir. " + text
+            });
+            process.waitFor();
+            
+            System.out.println("[TalkBack]: Hi Sir. [" + language + "] " + text);
+            Thread.sleep(SPEECH_DELAY);
         } catch (Exception e) {
             System.out.println("[JARVIS]: " + text);
+        }
+    }
+
+    /**
+     * Announce for accessibility (TalkBack)
+     * This simulates Android TalkBack announcements
+     */
+    private void announceForAccessibility(String announcement) {
+        if (!talkBackEnabled) {
+            return;
+        }
+        
+        // Log accessibility announcement
+        System.out.println("\n[ACCESSIBILITY - TalkBack]: " + announcement);
+        
+        try {
+            // Try to use espeak for accessibility announcement
+            Runtime.getRuntime().exec(new String[]{
+                    "espeak",
+                    announcement
+            }).waitFor();
+        } catch (Exception e) {
+            // Silent fail - continue anyway
         }
     }
 
@@ -97,5 +170,37 @@ public class TextToSpeech {
         if (audioClip != null && audioClip.isRunning()) {
             audioClip.stop();
         }
+    }
+
+    /**
+     * Announce screen event for accessibility
+     */
+    public void announceScreenEvent(String event) {
+        if (!talkBackEnabled) {
+            return;
+        }
+        
+        System.out.println("[ACCESSIBILITY - Screen Event]: " + event);
+        
+        try {
+            Runtime.getRuntime().exec(new String[]{
+                    "espeak",
+                    event
+            }).waitFor();
+        } catch (Exception e) {
+            // Silent fail
+        }
+    }
+
+    /**
+     * Provide voice feedback for user actions
+     */
+    public void provideFeedback(String feedback) {
+        if (!talkBackEnabled) {
+            return;
+        }
+        
+        System.out.println("[ACCESSIBILITY - Feedback]: " + feedback);
+        announceForAccessibility(feedback);
     }
 }

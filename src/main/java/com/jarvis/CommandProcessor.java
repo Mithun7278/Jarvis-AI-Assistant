@@ -6,20 +6,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Command Processor for Jarvis AI Assistant
- * Processes and executes user commands
+ * Command Processor for Jarvis AI Assistant with TalkBack Support
+ * Processes and executes user commands with accessibility features
  */
 public class CommandProcessor {
     private TextToSpeech textToSpeech;
     private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy");
+    private static final String GREETING_PREFIX = "Hi Sir. ";
 
     public CommandProcessor(TextToSpeech textToSpeech) {
         this.textToSpeech = textToSpeech;
     }
 
     /**
-     * Process user command
+     * Process user command with TalkBack support
      */
     public boolean processCommand(String command) {
         if (command == null || command.trim().isEmpty()) {
@@ -31,88 +32,116 @@ public class CommandProcessor {
         // Time command
         if (lowerCommand.contains("time") || lowerCommand.contains("neram")) {
             String time = LocalDateTime.now().format(timeFormatter);
-            String response = "Idhu " + time;
+            String response = GREETING_PREFIX + "Idhu " + time;
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Time announced: " + time);
             return true;
         }
 
         // Date command
         if (lowerCommand.contains("date") || lowerCommand.contains("naal")) {
             String date = LocalDateTime.now().format(dateFormatter);
-            String response = "Inru " + date;
+            String response = GREETING_PREFIX + "Inru " + date;
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Date announced: " + date);
             return true;
         }
 
         // Greeting commands
         if (lowerCommand.contains("hello") || lowerCommand.contains("hi") || lowerCommand.contains("vanakkam")) {
-            String response = "Vanakkam! Yeppadi irukkai? Enakku yenna thuli seigal patrum?";
+            String response = GREETING_PREFIX + "Yeppadi irukkai? Enakku yenna thuli seigal patrum?";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Greeting acknowledged");
             return true;
         }
 
         // Name query
         if (lowerCommand.contains("your name") || lowerCommand.contains("peru")) {
-            String response = "En peru Jarvis. Naan oru AI assistant.";
+            String response = GREETING_PREFIX + "En peru Jarvis. Naan oru AI assistant.";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Name announced");
             return true;
         }
 
         // Thank you
         if (lowerCommand.contains("thank")) {
-            String response = "Nandri! Vaalkai!";
+            String response = GREETING_PREFIX + "Nandri! Vaalkai!";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Thank you acknowledged");
             return true;
         }
 
         // Open Google
         if (lowerCommand.contains("open google")) {
             openBrowser("https://www.google.com");
-            String response = "Google-ai thira panren.";
+            String response = GREETING_PREFIX + "Google-ai thira panren.";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Opening Google");
             return true;
         }
 
         // Open YouTube
         if (lowerCommand.contains("open youtube")) {
             openBrowser("https://www.youtube.com");
-            String response = "YouTube-ai thira panren.";
+            String response = GREETING_PREFIX + "YouTube-ai thira panren.";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Opening YouTube");
             return true;
         }
 
         // How are you
         if (lowerCommand.contains("how are you") || lowerCommand.contains("eppadi")) {
-            String response = "Naan sari irukren. Nee eppadi irukkai?";
+            String response = GREETING_PREFIX + "Naan sari irukren. Nee eppadi irukkai?";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Status inquiry answered");
+            return true;
+        }
+
+        // TalkBack toggle
+        if (lowerCommand.contains("talkback on")) {
+            textToSpeech.setTalkBackEnabled(true);
+            String response = GREETING_PREFIX + "TalkBack enabled.";
+            textToSpeech.speak(response);
+            System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("TalkBack is now enabled");
+            return true;
+        }
+
+        if (lowerCommand.contains("talkback off")) {
+            textToSpeech.setTalkBackEnabled(false);
+            String response = "[Jarvis]: Hi Sir. TalkBack disabled.";
+            System.out.println(response);
+            textToSpeech.announceScreenEvent("TalkBack is now disabled");
             return true;
         }
 
         // Help
         if (lowerCommand.contains("help")) {
             printHelp();
-            String response = "Enakku thuli seigal patrum. Yenna vendina sollu?";
+            String response = GREETING_PREFIX + "Enakku thuli seigal patrum. Yenna vendina sollu?";
             textToSpeech.speakTanglish(response);
+            textToSpeech.announceScreenEvent("Help menu displayed");
             return true;
         }
 
         // Exit/Quit
         if (lowerCommand.contains("exit") || lowerCommand.contains("quit") || lowerCommand.contains("bye") || lowerCommand.contains("varuvom")) {
-            String response = "Poi varuvom! Pudu naal tappu solluvom!";
+            String response = GREETING_PREFIX + "Poi varuvom! Pudu naal tappu solluvom!";
             textToSpeech.speakTanglish(response);
             System.out.println("[Jarvis]: " + response);
+            textToSpeech.announceScreenEvent("Goodbye. Jarvis shutting down");
             return false;
         }
 
-        // Default: don't respond to unknown commands (let API processor handle them)
+        // Default: don't respond to unknown commands
         return true;
     }
 
@@ -131,6 +160,7 @@ public class CommandProcessor {
             }
         } catch (Exception e) {
             System.out.println("[Error]: Could not open browser - " + e.getMessage());
+            textToSpeech.announceScreenEvent("Could not open browser");
         }
     }
 
@@ -155,6 +185,9 @@ public class CommandProcessor {
         System.out.println("  - 'programming joke' - Get a programming joke");
         System.out.println("  - 'quote' / 'motivation' - Get a motivational quote");
         System.out.println("  - 'weather' - Get weather information (Chennai)");
+        System.out.println("\nAccessibility Commands (TalkBack):");
+        System.out.println("  - 'talkback on' - Enable TalkBack accessibility");
+        System.out.println("  - 'talkback off' - Disable TalkBack accessibility");
         System.out.println("\n================================\n");
     }
 }
