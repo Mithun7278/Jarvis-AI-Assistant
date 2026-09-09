@@ -1,14 +1,22 @@
 package com.jarvis.core;
 
-import com.jarvis.config.JarvisConfig;
+import com.jarvis.commands.CommandResult;
+import com.jarvis.commands.CommandRouter;
+import com.jarvis.commands.CommandType;
+import com.jarvis.commands.impl.DefaultCommandRouter;
+import com.jarvis.response.ResponseGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 /**
- * Main JARVIS Application Class
+ * Updated JARVIS Application Class with Command Routing
  * 
  * This class orchestrates the entire JARVIS assistant lifecycle.
  * It manages initialization, command loop, and shutdown.
+ * Now includes command routing and response generation.
  */
 public class JarvisApplication {
     private static final Logger logger = LoggerFactory.getLogger(JarvisApplication.class);
@@ -16,6 +24,8 @@ public class JarvisApplication {
     private final JarvisConfig config;
     private final AssistantContext context;
     private final ConversationManager conversationManager;
+    private final CommandRouter commandRouter;
+    private final ResponseGenerator responseGenerator;
     private boolean running;
     
     /**
@@ -25,9 +35,11 @@ public class JarvisApplication {
         this.config = config;
         this.context = new AssistantContext();
         this.conversationManager = new ConversationManager();
+        this.commandRouter = new DefaultCommandRouter();
+        this.responseGenerator = new ResponseGenerator();
         this.running = false;
         
-        logger.info("JARVIS Application initialized");
+        logger.info("JARVIS Application initialized with command routing");
     }
     
     /**
@@ -43,6 +55,10 @@ public class JarvisApplication {
             
             // Initialize services
             initializeServices();
+            
+            // Print greeting
+            String greeting = responseGenerator.generateGreeting(context.getUserLanguagePreference());
+            System.out.println("\n[JARVIS] " + greeting);
             
             // Main command loop
             commandLoop();
@@ -69,39 +85,46 @@ public class JarvisApplication {
      */
     private void commandLoop() {
         logger.info("Entering command loop");
-        System.out.println("\n[Ready] Type 'help' for commands or 'exit' to quit\n");
+        System.out.println("[Ready] Type 'help' for commands or 'exit' to quit\n");
         
         while (running) {
             try {
                 // Get user input
                 System.out.print("jarvis> ");
-                String input = readUserInput();
+                String userInput = readUserInput();
                 
-                if (input.isEmpty()) {
+                if (userInput.isEmpty()) {
                     continue;
                 }
                 
-                logger.debug("Received input: {}", input);
+                logger.debug("Received input: {}", userInput);
+                context.setLastUserInput(userInput);
+                
+                // Route command
+                CommandResult result = commandRouter.route(userInput, context);
+                logger.debug("Command result: {}", result);
                 
                 // Check for exit
-                if ("exit".equalsIgnoreCase(input) || "quit".equalsIgnoreCase(input)) {
-                    System.out.println("\n[JARVIS] Goodbye, sir.");
+                if (result.getCommandType() == CommandType.EXIT) {
+                    System.out.println("\n[JARVIS] " + result.getMessage());
                     this.running = false;
                     break;
                 }
                 
-                // Check for help
-                if ("help".equalsIgnoreCase(input)) {
-                    printHelp();
-                    continue;
-                }
+                // Display response
+                String response = result.getMessage();
+                System.out.println("[JARVIS] " + response);
                 
-                // Echo input for now (Phase 2 will add command routing)
-                System.out.println("[JARVIS] Hi sir. You said: " + input);
+                // Record in conversation history
+                conversationManager.recordTurn(userInput, response);
                 
             } catch (Exception e) {
                 logger.error("Error processing command", e);
-                System.out.println("[ERROR] " + e.getMessage());
+                String errorResponse = responseGenerator.generateErrorResponse(
+                    e.getMessage(),
+                    context.getUserLanguagePreference()
+                );
+                System.out.println("[JARVIS] " + errorResponse);
             }
         }
     }
@@ -111,10 +134,11 @@ public class JarvisApplication {
      */
     private String readUserInput() {
         try {
-            java.io.BufferedReader reader = new java.io.BufferedReader(
-                new java.io.InputStreamReader(System.in)
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(System.in)
             );
-            return reader.readLine().trim();
+            String line = reader.readLine();
+            return line != null ? line.trim() : "";
         } catch (java.io.IOException e) {
             logger.error("Error reading user input", e);
             return "";
@@ -129,6 +153,7 @@ public class JarvisApplication {
         this.running = false;
         System.out.println("\n[JARVIS] Application terminated.");
         logger.info("JARVIS shutdown complete");
+        logger.info("Conversation history - {} turns recorded", conversationManager.size());
     }
     
     /**
@@ -139,25 +164,13 @@ public class JarvisApplication {
             "╔════════════════════════════════════════════════════════════════════════╗\n" +
             "║                                                                        ║\n" +
             "║              JARVIS - Personal AI Assistant v2.0.0                     ║\n" +
+            "║                   Phase 2: Command Routing Enabled                       ║\n" +
             "║                                                                        ║\n" +
             "║  A Java-based conversational AI with voice, memory, and web access     ║\n" +
             "║                                                                        ║\n" +
             "║         Powered by modular architecture and clean interfaces           ║\n" +
             "║                                                                        ║\n" +
             "╚════════════════════════════════════════════════════════════════════════╝\n");
-    }
-    
-    /**
-     * Print help message
-     */
-    private void printHelp() {
-        System.out.println("\n" +
-            "JARVIS Commands:\n" +
-            "  help               - Show this help message\n" +
-            "  exit / quit        - Exit the application\n" +
-            "\n" +
-            "Phase 1 Status: Core architecture initialized.\n" +
-            "Upcoming features: Voice input, AI processing, web search, memory, news\n");
     }
     
     /**
