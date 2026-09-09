@@ -1,3 +1,2 @@
-# Gradle Settings
 rootProject.name = 'jarvis-ai-assistant'
-rootProject.description = 'Jarvis AI Assistant with Tanglish Language Support'
+rootProject.description = 'JARVIS - Java-Based Personal AI Assistant'
